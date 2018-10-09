@@ -141,7 +141,8 @@ class ChatBot extends Component {
       this.setState({ isLogged });
     }
 
-    if (isAssistantSelected !== undefined && isAssistantSelected !== nextState.isAssistantSelected) {
+    if (isAssistantSelected !== undefined &&
+      isAssistantSelected !== nextState.isAssistantSelected) {
       this.setState({ isAssistantSelected });
     }
   }
@@ -513,8 +514,6 @@ class ChatBot extends Component {
       assistantsAvailable,
       className,
       contentStyle,
-      shouldLogFirst,
-      logFirstFunction,
       floating,
       floatingStyle,
       footerStyle,
