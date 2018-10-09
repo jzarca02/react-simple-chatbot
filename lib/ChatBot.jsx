@@ -220,12 +220,12 @@ class ChatBot extends Component {
     const previousStep = this.state.previousStep;
     const previousSteps = this.state.previousSteps;
 
-    if (previousStep.hasOwnProperty('avatar') && !previousStep.user) {
+    if (previousStep.avatar && !previousStep.user) {
       previousStep.avatar = botAvatar;
     }
 
     const replacedPreviousSteps = previousSteps.map((step) => {
-      if (typeof step === 'object' && step.hasOwnProperty('avatar') && !step.user) {
+      if (typeof step === 'object' && step.avatar && !step.user) {
         step.avatar = botAvatar;
       }
       return step;
