@@ -3,11 +3,7 @@ import defaultTheme from '../theme';
 import { pulse } from '../common/animations';
 
 const fillFunc = (props) => {
-  const { speaking, invalid, theme } = props;
-
-  if (speaking) {
-    return theme.headerBgColor;
-  }
+  const { invalid, theme } = props;
   return invalid ? '#E53935' : '#4a4a4a';
 };
 
@@ -30,8 +26,7 @@ const SubmitButton = styled.button`
     width: 23px;
     height: 23px;
     border-radius: 50%;
-    animation: ${({ theme, speaking }) =>
-      speaking ? `${pulse(theme.headerBgColor)} 2s ease infinite` : ''};
+    animation: '';
   }
   &:not(:disabled):hover {
     opacity: 0.7;

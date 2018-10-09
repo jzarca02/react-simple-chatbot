@@ -84,11 +84,12 @@
     "prop-types": "^15.6.0",
     "random-id": "0.0.2",
     "react": "^16.4.1",
-    "react-dom": "^16.4.1"
+    "react-dom": "^16.4.1",
+    "uishibam": "https://github.com/Wishibam/UIshibam"
   },
   "peerDependencies": {
-    "styled-components": ">= 2.0.0",
     "react": "^16.x",
-    "react-dom": "^16.x"
+    "react-dom": "^16.x",
+    "styled-components": ">= 2.0.0"
   }
 }
