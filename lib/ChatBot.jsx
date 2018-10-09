@@ -28,8 +28,8 @@ class ChatBot extends Component {
     super(props);
 
     this.state = {
-      isAssistantSelected: false,
-      assistant: {},
+      isAssistantSelected: props.isAssistantSelected,
+      assistant: props.assistant,
       renderedSteps: [],
       previousSteps: [],
       currentStep: {},
@@ -40,6 +40,7 @@ class ChatBot extends Component {
       isLogged: false,
       inputValue: '',
       inputInvalid: false,
+      defaultBotSettings: {},
       defaultUserSettings: {},
     };
 
@@ -52,6 +53,7 @@ class ChatBot extends Component {
     this.onValueChange = this.onValueChange.bind(this);
     this.handleKeyPress = this.handleKeyPress.bind(this);
     this.handleSubmitButton = this.handleSubmitButton.bind(this);
+    this.selectAssistant = this.selectAssistant.bind(this);
   }
 
   componentWillMount() {
@@ -67,20 +69,20 @@ class ChatBot extends Component {
     } = this.props;
     const steps = {};
 
-    const defaultBotSettings = { delay: botDelay, avatar: botAvatar };
-    const defaultUserSettings = { delay: userDelay, avatar: userAvatar };
-    const defaultCustomSettings = { delay: customDelay };
+    this.defaultBotSettings = { delay: botDelay, avatar: botAvatar };
+    this.defaultUserSettings = { delay: userDelay, avatar: userAvatar };
+    this.defaultCustomSettings = { delay: customDelay };
 
     for (let i = 0, len = this.props.steps.length; i < len; i += 1) {
       const step = this.props.steps[i];
       let settings = {};
 
       if (step.user) {
-        settings = defaultUserSettings;
+        settings = this.defaultUserSettings;
       } else if (step.message || step.asMessage) {
-        settings = defaultBotSettings;
+        settings = this.defaultBotSettings;
       } else if (step.component) {
-        settings = defaultCustomSettings;
+        settings = this.defaultCustomSettings;
       }
 
       steps[step.id] = Object.assign({}, settings, schema.parse(step));
@@ -96,28 +98,25 @@ class ChatBot extends Component {
       steps[firstStep.id].message = firstStep.message;
     }
 
-    const {
-      currentStep,
-      previousStep,
-      previousSteps,
-      renderedSteps,
-    } = storage.getData({
-      cacheName,
-      cache,
-      firstStep,
-      steps,
-    }, () => {
-      // focus input if last step cached is a user step
-      this.setState({ disabled: false }, () => {
-        if (enableMobileAutoFocus || !isMobile()) {
-          this.input.focus();
-        }
-      });
-    });
+    const { currentStep, previousStep, previousSteps, renderedSteps } = storage.getData(
+      {
+        cacheName,
+        cache,
+        firstStep,
+        steps,
+      },
+      () => {
+        // focus input if last step cached is a user step
+        this.setState({ disabled: false }, () => {
+          if (enableMobileAutoFocus || !isMobile()) {
+            this.input.focus();
+          }
+        });
+      },
+    );
 
     this.setState({
       currentStep,
-      defaultUserSettings,
       previousStep,
       previousSteps,
       renderedSteps,
@@ -126,12 +125,12 @@ class ChatBot extends Component {
   }
 
   componentDidMount() {
-    this.content.addEventListener('DOMNodeInserted', this.onNodeInserted.bind(this));
+    // this.content.addEventListener('DOMNodeInserted', this.onNodeInserted.bind(this));
     window.addEventListener('resize', this.onResize);
   }
 
   componentWillUpdate(nextProps, nextState) {
-    const { opened, isLogged, isAssistantSelected } = nextProps;
+    const { opened, isLogged, isAssistantSelected, assistant } = nextProps;
 
     if (opened !== undefined && opened !== nextState.opened) {
       this.setState({ opened });
@@ -141,8 +140,16 @@ class ChatBot extends Component {
       this.setState({ isLogged });
     }
 
-    if (isAssistantSelected !== undefined &&
-      isAssistantSelected !== nextState.isAssistantSelected) {
+    if (assistant !== undefined && assistant !== nextState.assistant) {
+      this.setState({ assistant });
+      this.refreshPSAvatars(assistant.image);
+      this.replaceAvatarInPreviousSteps(assistant.image);
+    }
+
+    if (
+      isAssistantSelected !== undefined &&
+      isAssistantSelected !== nextState.isAssistantSelected
+    ) {
       this.setState({ isAssistantSelected });
     }
   }
@@ -189,14 +196,51 @@ class ChatBot extends Component {
     return steps;
   }
 
+  refreshPSAvatars(botAvatar) {
+    this.defaultBotSettings.avatar = botAvatar;
+
+    for (let i = 0, len = this.props.steps.length; i < len; i += 1) {
+      const step = this.props.steps[i];
+      let settings = {};
+
+      if (step.user) {
+        settings = this.defaultUserSettings;
+      } else if (step.message || step.asMessage) {
+        settings = this.defaultBotSettings;
+      } else if (step.component) {
+        settings = this.defaultCustomSettings;
+      }
+
+      this.props.steps[i] = Object.assign({}, settings, schema.parse(step));
+      this.setState({ steps: this.props.steps });
+    }
+  }
+
+  replaceAvatarInPreviousSteps(botAvatar) {
+    const previousStep = this.state.previousStep;
+    const previousSteps = this.state.previousSteps;
+
+    if (previousStep.hasOwnProperty('avatar') && !previousStep.user) {
+      previousStep.avatar = botAvatar;
+    }
+
+    const replacedPreviousSteps = previousSteps.map((step) => {
+      if (typeof step === 'object' && step.hasOwnProperty('avatar') && !step.user) {
+        step.avatar = botAvatar;
+      }
+      return step;
+    });
+
+    this.setState({
+      previousStep,
+      previousSteps: replacedPreviousSteps,
+    });
+  }
+
+
   triggerNextStep(data) {
     const { enableMobileAutoFocus } = this.props;
-    const {
-      defaultUserSettings,
-      previousSteps,
-      renderedSteps,
-      steps,
-    } = this.state;
+    const { defaultUserSettings, previousSteps, renderedSteps, steps } = this.state;
     let { currentStep, previousStep } = this.state;
     const isEnd = currentStep.end;
 
@@ -383,15 +427,18 @@ class ChatBot extends Component {
       renderedSteps.push(currentStep);
       previousSteps.push(currentStep);
 
-      this.setState({
-        currentStep,
-        renderedSteps,
-        previousSteps,
-        disabled: true,
-        inputValue: '',
-      }, () => {
-        this.input.blur();
-      });
+      this.setState(
+        {
+          currentStep,
+          renderedSteps,
+          previousSteps,
+          disabled: true,
+          inputValue: '',
+        },
+        () => {
+          this.input.blur();
+        },
+      );
     }
   }
 
@@ -402,23 +449,29 @@ class ChatBot extends Component {
     const value = inputValue;
 
     if (typeof result !== 'boolean' || !result) {
-      this.setState({
-        inputValue: result.toString(),
-        inputInvalid: true,
-        disabled: true,
-      }, () => {
-        setTimeout(() => {
-          this.setState({
-            inputValue: value,
-            inputInvalid: false,
-            disabled: false,
-          }, () => {
-            if (enableMobileAutoFocus || !isMobile()) {
-              this.input.focus();
-            }
-          });
-        }, 2000);
-      });
+      this.setState(
+        {
+          inputValue: result.toString(),
+          inputInvalid: true,
+          disabled: true,
+        },
+        () => {
+          setTimeout(() => {
+            this.setState(
+              {
+                inputValue: value,
+                inputInvalid: false,
+                disabled: false,
+              },
+              () => {
+                if (enableMobileAutoFocus || !isMobile()) {
+                  this.input.focus();
+                }
+              },
+            );
+          }, 2000);
+        },
+      );
 
       return true;
     }
@@ -443,10 +496,27 @@ class ChatBot extends Component {
     }
   }
 
+  selectAssistant(assistantId) {
+    if (this.props.selectAssistantFunction) {
+      console.log(
+        'should log first',
+        this.props.assistants.filter(assistant => assistant.id === assistantId)[0],
+      );
+      this.props.selectAssistantFunction(
+        this.props.assistants.filter(assistant => assistant.id === assistantId)[0],
+        true,
+      );
+    } else {
+      this.setState({
+        assistant: this.props.assistants.filter(assistant => assistant.id === assistantId)[0],
+        isAssistantSelected: true,
+      });
+    }
+  }
+
   renderStep(step, index) {
     const { renderedSteps } = this.state;
     const {
-      avatarStyle,
       bubbleStyle,
       bubbleOptionStyle,
       customStyle,
@@ -489,7 +559,6 @@ class ChatBot extends Component {
         previousStep={previousStep}
         previousValue={previousStep.value}
         triggerNextStep={this.triggerNextStep}
-        avatarStyle={avatarStyle}
         bubbleStyle={bubbleStyle}
         hideBotAvatar={hideBotAvatar}
         hideUserAvatar={hideUserAvatar}
@@ -500,18 +569,11 @@ class ChatBot extends Component {
   }
 
   render() {
+    const { currentStep, disabled, inputInvalid, inputValue, opened, renderedSteps } = this.state;
     const {
-      currentStep,
-      disabled,
-      inputInvalid,
-      inputValue,
-      opened,
       assistant,
       isAssistantSelected,
-      renderedSteps,
-    } = this.state;
-    const {
-      assistantsAvailable,
+      assistants,
       className,
       contentStyle,
       floating,
@@ -547,22 +609,25 @@ class ChatBot extends Component {
 
     const inputAttributesOverride = currentStep.inputAttributes || inputAttributes;
 
-    const chatComponent = () => {
-      this.content.addEventListener('DOMNodeInserted', this.onNodeInserted.bind(this));
-      return (
-        <div>
-          <Content
-            className="rsc-content"
-            innerRef={contentRef => (this.content = contentRef)}
-            floating={floating}
-            style={contentStyle}
-            height={height}
-            hideInput={currentStep.hideInput}
-          >
-            {_.map(renderedSteps, this.renderStep)}
-          </Content>
-          <Footer className="rsc-footer" style={footerStyle}>
-            {!currentStep.hideInput && (
+    const pickAssistants = () => (
+      <PsPicker personalshoppers={assistants} clickFn={this.selectAssistant} />
+    );
+
+    const chatComponent = () => (
+      // this.content.addEventListener('DOMNodeInserted', this.onNodeInserted.bind(this));
+      <div>
+        <Content
+          className="rsc-content"
+          innerRef={contentRef => (this.content = contentRef)}
+          floating={floating}
+          style={contentStyle}
+          height={height}
+          hideInput={currentStep.hideInput}
+        >
+          {_.map(renderedSteps, this.renderStep)}
+        </Content>
+        <Footer className="rsc-footer" style={footerStyle}>
+          {!currentStep.hideInput && (
             <Input
               type="textarea"
               style={inputStyle}
@@ -578,22 +643,22 @@ class ChatBot extends Component {
               hasButton={!hideSubmitButton}
               {...inputAttributesOverride}
             />
-        )}
-            {!currentStep.hideInput && !hideSubmitButton && (
-            <SubmitButton
-              className="rsc-submit-button"
-              style={submitButtonStyle}
-              onClick={this.handleSubmitButton}
-              invalid={inputInvalid}
-              disabled={disabled}
-            >
-              {icon}
-            </SubmitButton>
-        )}
-          </Footer>
-        </div>
-      );
-    };
+          )}
+          {!currentStep.hideInput &&
+            !hideSubmitButton && (
+              <SubmitButton
+                className="rsc-submit-button"
+                style={submitButtonStyle}
+                onClick={this.handleSubmitButton}
+                invalid={inputInvalid}
+                disabled={disabled}
+              >
+                {icon}
+              </SubmitButton>
+            )}
+        </Footer>
+      </div>
+    );
 
     return (
       <div className={`rsc ${className}`}>
@@ -606,7 +671,7 @@ class ChatBot extends Component {
           >
             <ChatIcon />
           </FloatButton>
-         )}
+        )}
         <ChatBotContainer
           className="rsc-container"
           floating={floating}
@@ -617,10 +682,7 @@ class ChatBot extends Component {
           height={height}
         >
           {!hideHeader && header}
-          {(isAssistantSelected) ? <div>
-            {chatComponent(assistant)}
-          </div>
-          : <PsPicker assistants={assistantsAvailable} onClick={this.selectAssistant} />}
+          {isAssistantSelected ? <div>{chatComponent(assistant)}</div> : pickAssistants(assistants)}
         </ChatBotContainer>
       </div>
     );
@@ -628,8 +690,9 @@ class ChatBot extends Component {
 }
 
 ChatBot.propTypes = {
-  assistantsAvailable: PropTypes.array,
-  avatarStyle: PropTypes.object,
+  assistant: PropTypes.object,
+  isAssistantSelected: PropTypes.bool,
+  assistants: PropTypes.array,
   botAvatar: PropTypes.string,
   botDelay: PropTypes.number,
   bubbleOptionStyle: PropTypes.object,
@@ -659,6 +722,7 @@ ChatBot.propTypes = {
   placeholder: PropTypes.string,
   shouldLogFirst: PropTypes.bool,
   logFirstFunction: PropTypes.func,
+  selectAssistantFunction: PropTypes.func,
   steps: PropTypes.array.isRequired,
   style: PropTypes.object,
   submitButtonStyle: PropTypes.object,
@@ -669,8 +733,9 @@ ChatBot.propTypes = {
 };
 
 ChatBot.defaultProps = {
-  assistantsAvailable: [],
-  avatarStyle: {},
+  assistant: undefined,
+  isAssistantSelected: false,
+  assistants: [],
   botDelay: 1000,
   bubbleOptionStyle: {},
   bubbleStyle: {},
@@ -691,13 +756,14 @@ ChatBot.defaultProps = {
   hideBotAvatar: false,
   hideHeader: false,
   hideSubmitButton: false,
-  hideUserAvatar: false,
+  hideUserAvatar: true,
   inputStyle: {},
   opened: undefined,
   placeholder: 'Type the message ...',
   inputAttributes: {},
   shouldLogFirst: false,
   logFirstFunction: undefined,
+  selectAssistantFunction: undefined,
   style: {},
   submitButtonStyle: {},
   toggleFloating: undefined,

@@ -6446,8 +6446,8 @@ uglifyjs-webpack-plugin@^0.4.6:
     webpack-sources "^1.0.1"
 
 "uishibam@https://github.com/Wishibam/UIshibam":
-  version "0.3.0"
-  resolved "https://github.com/Wishibam/UIshibam#3f9b7434086f6117ee8adc222e308f2da0992b9c"
+  version "1.0.0"
+  resolved "https://github.com/Wishibam/UIshibam#69bfc1ff07054714c88ca06135935ebb479249c9"
   dependencies:
     react "^16.5.2"
     react-avatar "^3.4.4"
