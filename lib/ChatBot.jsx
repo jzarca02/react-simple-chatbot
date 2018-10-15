@@ -5,7 +5,7 @@ import Random from 'random-id';
 
 import { PsPicker } from 'uishibam';
 
-import { CustomStep, OptionsStep, TextStep } from './steps_components';
+import { CustomStep, OptionsStep, TextStep, ImageStep } from './steps_components';
 import schema from './schemas/schema';
 import * as storage from './storage';
 import {
@@ -81,7 +81,7 @@ class ChatBot extends Component {
         settings = this.defaultUserSettings;
       } else if (step.message || step.asMessage) {
         settings = this.defaultBotSettings;
-      } else if (step.component) {
+      } else if (step.image || step.component) {
         settings = this.defaultCustomSettings;
       }
 
@@ -205,9 +205,9 @@ class ChatBot extends Component {
 
       if (step.user) {
         settings = this.defaultUserSettings;
-      } else if (step.message || step.asMessage) {
+      } else if (step.message || step.asMessage || step.image) {
         settings = this.defaultBotSettings;
-      } else if (step.component) {
+      } else if (step.component || step.image) {
         settings = this.defaultCustomSettings;
       }
 
@@ -373,7 +373,7 @@ class ChatBot extends Component {
       return true;
     }
 
-    const isLast = step.user !== nextStep.user;
+    const isLast = step.user && step.user !== nextStep.user;
     return isLast;
   }
 
@@ -392,7 +392,7 @@ class ChatBot extends Component {
       return true;
     }
 
-    const isFirst = step.user !== lastStep.user;
+    const isFirst = step.user && step.user !== lastStep.user;
     return isFirst;
   }
 
@@ -523,13 +523,26 @@ class ChatBot extends Component {
       hideBotAvatar,
       hideUserAvatar,
     } = this.props;
-    const { options, component, asMessage } = step;
+    const { options, component, asMessage, image } = step;
     const steps = this.generateRenderedStepsById();
     const previousStep = index > 0 ? renderedSteps[index - 1] : {};
 
     if (component && !asMessage) {
       return (
         <CustomStep
+          key={index}
+          step={step}
+          steps={steps}
+          style={customStyle}
+          previousStep={previousStep}
+          triggerNextStep={this.triggerNextStep}
+        />
+      );
+    }
+
+    if (image) {
+      return (
+        <ImageStep
           key={index}
           step={step}
           steps={steps}
