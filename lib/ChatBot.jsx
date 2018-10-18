@@ -584,7 +584,6 @@ class ChatBot extends Component {
       assistant,
       isAssistantSelected,
       shouldPickAssistantFirst,
-      selectAssistantFunction,
       assistants,
       className,
       contentStyle,
