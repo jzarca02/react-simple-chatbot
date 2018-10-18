@@ -205,7 +205,7 @@ class ChatBot extends Component {
 
       if (step.user) {
         settings = this.defaultUserSettings;
-      } else if (step.message || step.asMessage || step.image) {
+      } else if (step.message || step.asMessage) {
         settings = this.defaultBotSettings;
       } else if (step.component || step.image) {
         settings = this.defaultCustomSettings;
