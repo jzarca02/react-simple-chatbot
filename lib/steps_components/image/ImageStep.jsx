@@ -1,7 +1,12 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import Loading from '../common/Loading';
+import styled from 'styled-components';
 import ImageStepContainer from './ImageStepContainer';
+
+const ImageBubble = styled.img`
+  width: 100%
+  height: 100%
+`;
 
 class ImageStep extends Component {
   /* istanbul ignore next */
@@ -31,7 +36,7 @@ class ImageStep extends Component {
   renderComponent() {
     const { step, steps, previousStep, triggerNextStep } = this.props;
     const { image } = step;
-    const renderImage = imageSrc => <img alt="gif_render" src={imageSrc} />;
+    const renderImage = imageSrc => <ImageBubble alt="gif_render" src={imageSrc} />;
     return React.cloneElement(renderImage(image), {
       step,
       steps,
@@ -41,19 +46,14 @@ class ImageStep extends Component {
   }
 
   render() {
-    const { loading } = this.state;
-    const { style } = this.props;
+    const { isLast } = this.props;
 
     return (
       <ImageStepContainer
-        className="rsc-cs"
-        style={style}
+        className="rsc-ts-bubble"
+        isLast={isLast}
       >
-        {
-          loading ? (
-            <Loading />
-          ) : this.renderComponent()
-        }
+        { this.renderComponent() }
       </ImageStepContainer>
     );
   }
@@ -62,7 +62,7 @@ class ImageStep extends Component {
 ImageStep.propTypes = {
   step: PropTypes.object.isRequired,
   steps: PropTypes.object.isRequired,
-  style: PropTypes.object.isRequired,
+  isLast: PropTypes.bool.isRequired,
   previousStep: PropTypes.object.isRequired,
   triggerNextStep: PropTypes.func.isRequired,
 };

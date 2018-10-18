@@ -284,7 +284,7 @@ class ChatBot extends Component {
       }
 
       const trigger = this.getTriggeredStep(currentStep.trigger, currentStep.value);
-      let nextStep = Object.assign({}, steps[trigger]);
+      let nextStep = Object.assign({}, steps.find(x => x.id === trigger));
 
       if (nextStep.message) {
         nextStep.message = this.getStepMessage(nextStep.message);
@@ -489,7 +489,6 @@ class ChatBot extends Component {
 
   toggleLogin(logState) {
     if (this.props.logFirstFunction) {
-      console.log('should log first');
       this.props.logFirstFunction({ logState });
     } else {
       this.setState({ logState });
@@ -498,10 +497,6 @@ class ChatBot extends Component {
 
   selectAssistant(assistantId) {
     if (this.props.selectAssistantFunction) {
-      console.log(
-        'should log first',
-        this.props.assistants.filter(assistant => assistant.id === assistantId)[0],
-      );
       this.props.selectAssistantFunction(
         this.props.assistants.filter(assistant => assistant.id === assistantId)[0],
         true,
@@ -546,9 +541,11 @@ class ChatBot extends Component {
           key={index}
           step={step}
           steps={steps}
-          style={customStyle}
+          bubbleStyle={bubbleStyle}
           previousStep={previousStep}
           triggerNextStep={this.triggerNextStep}
+          asMessage={true}
+          isLast={this.isLastPosition(step)}
         />
       );
     }
@@ -586,6 +583,8 @@ class ChatBot extends Component {
     const {
       assistant,
       isAssistantSelected,
+      shouldPickAssistantFirst,
+      selectAssistantFunction,
       assistants,
       className,
       contentStyle,
@@ -621,6 +620,13 @@ class ChatBot extends Component {
     const inputPlaceholder = currentStep.placeholder || placeholder;
 
     const inputAttributesOverride = currentStep.inputAttributes || inputAttributes;
+
+    const renderCorrectComponent = () => {
+      if (shouldPickAssistantFirst && assistants.length && !isAssistantSelected) {
+        return pickAssistants(assistants);
+      }
+      return chatComponent(assistant);
+    };
 
     const pickAssistants = () => (
       <PsPicker personalshoppers={assistants} clickFn={this.selectAssistant} />
@@ -695,7 +701,7 @@ class ChatBot extends Component {
           height={height}
         >
           {!hideHeader && header}
-          {isAssistantSelected ? <div>{chatComponent(assistant)}</div> : pickAssistants(assistants)}
+          {renderCorrectComponent()}
         </ChatBotContainer>
       </div>
     );
@@ -734,6 +740,7 @@ ChatBot.propTypes = {
   toggleFloating: PropTypes.func,
   placeholder: PropTypes.string,
   shouldLogFirst: PropTypes.bool,
+  shouldPickAssistantFirst: PropTypes.bool,
   logFirstFunction: PropTypes.func,
   selectAssistantFunction: PropTypes.func,
   steps: PropTypes.array.isRequired,
@@ -748,6 +755,7 @@ ChatBot.propTypes = {
 ChatBot.defaultProps = {
   assistant: undefined,
   isAssistantSelected: false,
+  shouldPickAssistantFirst: false,
   assistants: [],
   botDelay: 1000,
   bubbleOptionStyle: {},

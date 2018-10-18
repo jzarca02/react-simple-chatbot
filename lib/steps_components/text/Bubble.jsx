@@ -20,14 +20,16 @@ const Bubble = styled.div`
   font-size: 14px;
   max-width: 50%;
   margin: ${(props) => {
-    const { isFirst, showAvatar, user } = props;
-    if (!isFirst && showAvatar) {
+    const { isFirst, isLast, showAvatar, user } = props;
+    if (isLast && showAvatar) {
+      return user ? '-8px 46px 10px 0' : '-8px 0 10px 0px';
+    } else if (!isFirst && showAvatar) {
       return user ? '-8px 46px 10px 0' : '-8px 0 10px 46px';
     } else if (!isFirst && !showAvatar) {
       return user ? '-8px 0px 10px 0' : '-8px 0 10px 0px';
     }
 
-    return '0 0 10px 0';
+    return '0 0 10px 46px';
   }};
   overflow: hidden;
   position: relative;
