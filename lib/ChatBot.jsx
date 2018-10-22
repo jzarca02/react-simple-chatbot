@@ -268,6 +268,7 @@ class ChatBot extends Component {
         trigger,
       });
 
+
       renderedSteps.pop();
       previousSteps.pop();
       renderedSteps.push(currentStep);
@@ -333,6 +334,7 @@ class ChatBot extends Component {
         });
       }, 300);
     }
+    this.props.addMessage(previousSteps[previousSteps.length - 1]);
   }
 
   handleEnd() {
