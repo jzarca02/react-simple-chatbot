@@ -41,9 +41,9 @@ class CustomStep extends Component {
 
   render() {
     const { loading } = this.state;
-    const { style } = this.props;
+    const { style, step } = this.props;
 
-    return (
+    return step.component ? (
       <CustomStepContainer
         className="rsc-cs"
         style={style}
@@ -54,7 +54,7 @@ class CustomStep extends Component {
           ) : this.renderComponent()
         }
       </CustomStepContainer>
-    );
+    ) : null;
   }
 }
 
