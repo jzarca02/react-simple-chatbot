@@ -83,7 +83,7 @@ class TextStep extends Component {
           user={user}
         >
           {
-            isFirst && showAvatar &&
+            isLast && showAvatar &&
             <Image
               className="rsc-ts-image"
               style={avatarStyle}

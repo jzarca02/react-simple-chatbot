@@ -5,7 +5,7 @@ import Random from 'random-id';
 
 import { PsPicker } from 'uishibam';
 
-import { CustomStep, OptionsStep, TextStep } from './steps_components';
+import { CustomStep, OptionsStep, TextStep, ImageStep } from './steps_components';
 import schema from './schemas/schema';
 import * as storage from './storage';
 import {
@@ -81,7 +81,7 @@ class ChatBot extends Component {
         settings = this.defaultUserSettings;
       } else if (step.message || step.asMessage) {
         settings = this.defaultBotSettings;
-      } else if (step.component) {
+      } else if (step.image || step.component) {
         settings = this.defaultCustomSettings;
       }
 
@@ -207,7 +207,7 @@ class ChatBot extends Component {
         settings = this.defaultUserSettings;
       } else if (step.message || step.asMessage) {
         settings = this.defaultBotSettings;
-      } else if (step.component) {
+      } else if (step.component || step.image) {
         settings = this.defaultCustomSettings;
       }
 
@@ -268,6 +268,7 @@ class ChatBot extends Component {
         trigger,
       });
 
+
       renderedSteps.pop();
       previousSteps.pop();
       renderedSteps.push(currentStep);
@@ -284,7 +285,7 @@ class ChatBot extends Component {
       }
 
       const trigger = this.getTriggeredStep(currentStep.trigger, currentStep.value);
-      let nextStep = Object.assign({}, steps[trigger]);
+      let nextStep = Object.assign({}, steps.find(x => x.id === trigger));
 
       if (nextStep.message) {
         nextStep.message = this.getStepMessage(nextStep.message);
@@ -333,6 +334,7 @@ class ChatBot extends Component {
         });
       }, 300);
     }
+    this.props.addMessage(previousSteps[previousSteps.length - 1]);
   }
 
   handleEnd() {
@@ -373,7 +375,7 @@ class ChatBot extends Component {
       return true;
     }
 
-    const isLast = step.user !== nextStep.user;
+    const isLast = step.user && step.user !== nextStep.user;
     return isLast;
   }
 
@@ -392,7 +394,7 @@ class ChatBot extends Component {
       return true;
     }
 
-    const isFirst = step.user !== lastStep.user;
+    const isFirst = step.user && step.user !== lastStep.user;
     return isFirst;
   }
 
@@ -489,7 +491,6 @@ class ChatBot extends Component {
 
   toggleLogin(logState) {
     if (this.props.logFirstFunction) {
-      console.log('should log first');
       this.props.logFirstFunction({ logState });
     } else {
       this.setState({ logState });
@@ -498,10 +499,6 @@ class ChatBot extends Component {
 
   selectAssistant(assistantId) {
     if (this.props.selectAssistantFunction) {
-      console.log(
-        'should log first',
-        this.props.assistants.filter(assistant => assistant.id === assistantId)[0],
-      );
       this.props.selectAssistantFunction(
         this.props.assistants.filter(assistant => assistant.id === assistantId)[0],
         true,
@@ -523,7 +520,7 @@ class ChatBot extends Component {
       hideBotAvatar,
       hideUserAvatar,
     } = this.props;
-    const { options, component, asMessage } = step;
+    const { options, component, asMessage, image } = step;
     const steps = this.generateRenderedStepsById();
     const previousStep = index > 0 ? renderedSteps[index - 1] : {};
 
@@ -536,6 +533,21 @@ class ChatBot extends Component {
           style={customStyle}
           previousStep={previousStep}
           triggerNextStep={this.triggerNextStep}
+        />
+      );
+    }
+
+    if (image) {
+      return (
+        <ImageStep
+          key={index}
+          step={step}
+          steps={steps}
+          bubbleStyle={bubbleStyle}
+          previousStep={previousStep}
+          triggerNextStep={this.triggerNextStep}
+          asMessage={true}
+          isLast={this.isLastPosition(step)}
         />
       );
     }
@@ -573,6 +585,7 @@ class ChatBot extends Component {
     const {
       assistant,
       isAssistantSelected,
+      shouldPickAssistantFirst,
       assistants,
       className,
       contentStyle,
@@ -608,6 +621,13 @@ class ChatBot extends Component {
     const inputPlaceholder = currentStep.placeholder || placeholder;
 
     const inputAttributesOverride = currentStep.inputAttributes || inputAttributes;
+
+    const renderCorrectComponent = () => {
+      if (shouldPickAssistantFirst && assistants.length && !isAssistantSelected) {
+        return pickAssistants(assistants);
+      }
+      return chatComponent(assistant);
+    };
 
     const pickAssistants = () => (
       <PsPicker personalshoppers={assistants} clickFn={this.selectAssistant} />
@@ -682,7 +702,7 @@ class ChatBot extends Component {
           height={height}
         >
           {!hideHeader && header}
-          {isAssistantSelected ? <div>{chatComponent(assistant)}</div> : pickAssistants(assistants)}
+          {renderCorrectComponent()}
         </ChatBotContainer>
       </div>
     );
@@ -721,6 +741,7 @@ ChatBot.propTypes = {
   toggleFloating: PropTypes.func,
   placeholder: PropTypes.string,
   shouldLogFirst: PropTypes.bool,
+  shouldPickAssistantFirst: PropTypes.bool,
   logFirstFunction: PropTypes.func,
   selectAssistantFunction: PropTypes.func,
   steps: PropTypes.array.isRequired,
@@ -735,6 +756,7 @@ ChatBot.propTypes = {
 ChatBot.defaultProps = {
   assistant: undefined,
   isAssistantSelected: false,
+  shouldPickAssistantFirst: false,
   assistants: [],
   botDelay: 1000,
   bubbleOptionStyle: {},
