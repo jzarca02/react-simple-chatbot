@@ -79,13 +79,15 @@
     "webpack-dev-server": "^2.5.1"
   },
   "dependencies": {
+    "@icons/material": "^0.3.0",
     "circular-json": "^0.3.1",
     "lodash": "^4.17.4",
     "prop-types": "^15.6.0",
     "random-id": "0.0.2",
     "react": "^16.4.1",
+    "react-color": "https://github.com/jzarca02/react-color.git",
     "react-dom": "^16.4.1",
-    "uishibam": "https://github.com/Wishibam/UIshibam"
+    "uishibam": "https://github.com/Wishibam/UIshibam.git"
   },
   "peerDependencies": {
     "react": "^16.x",
