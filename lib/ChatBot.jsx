@@ -5,7 +5,7 @@ import Random from 'random-id';
 
 import { PsPicker } from 'uishibam';
 
-import { CustomStep, OptionsStep, TextStep, ImageStep } from './steps_components';
+import { CustomStep, OptionsStep, TextStep, ImageStep, ColorPickerStep } from './steps_components';
 import schema from './schemas/schema';
 import * as storage from './storage';
 import {
@@ -30,6 +30,7 @@ class ChatBot extends Component {
     this.state = {
       isAssistantSelected: props.isAssistantSelected,
       assistant: props.assistant,
+      colors: props.colors,
       renderedSteps: [],
       previousSteps: [],
       currentStep: {},
@@ -43,6 +44,8 @@ class ChatBot extends Component {
       defaultBotSettings: {},
       defaultUserSettings: {},
     };
+
+    console.log(props);
 
     this.content = React.createRef();
     this.renderStep = this.renderStep.bind(this);
@@ -238,10 +241,12 @@ class ChatBot extends Component {
   }
 
   triggerNextStep(data) {
+    console.log('data received', data);
     const { enableMobileAutoFocus } = this.props;
     const { defaultUserSettings, previousSteps, renderedSteps, steps } = this.state;
     let { currentStep, previousStep } = this.state;
     const isEnd = currentStep.end;
+    console.log('currentStep received', currentStep);
 
     if (data && data.value) {
       currentStep.value = data.value;
@@ -256,6 +261,8 @@ class ChatBot extends Component {
     if (isEnd) {
       this.handleEnd();
     } else if (currentStep.options && data) {
+      console.log('currentstep options', currentStep);
+      console.log('data', data);
       const option = currentStep.options.filter(o => o.value === data.value)[0];
       const trigger = this.getTriggeredStep(option.trigger, currentStep.value);
       delete currentStep.options;
@@ -278,12 +285,16 @@ class ChatBot extends Component {
         previousSteps,
       });
     } else if (currentStep.trigger) {
+      console.log('currentstep trigger', currentStep);
       if (currentStep.replace) {
         renderedSteps.pop();
       }
 
       const trigger = this.getTriggeredStep(currentStep.trigger, currentStep.value);
+      console.log('trigger', trigger);
+
       let nextStep = Object.assign({}, steps.find(x => x.id === trigger));
+      console.log('next step', nextStep);
 
       if (nextStep.message) {
         nextStep.message = this.getStepMessage(nextStep.message);
@@ -517,8 +528,9 @@ class ChatBot extends Component {
       customStyle,
       hideBotAvatar,
       hideUserAvatar,
+      colors,
     } = this.props;
-    const { options, component, asMessage, image, hiddenaction } = step;
+    const { options, component, asMessage, image, hiddenaction, action } = step;
     const steps = this.generateRenderedStepsById();
     const previousStep = index > 0 ? renderedSteps[index - 1] : {};
 
@@ -540,6 +552,23 @@ class ChatBot extends Component {
         <CustomStep
           key={index}
           step={Object.assign(step, { component: null })}
+          steps={steps}
+          previousStep={previousStep}
+          triggerNextStep={this.triggerNextStep}
+        />
+      );
+    }
+
+    if (action && action === 'colors') {
+      return (
+        <ColorPickerStep
+          key={index}
+          colors={colors}
+          step={Object.assign(step, {
+            component: 'colors',
+            waitAction: true,
+            asMessage: true,
+            hideInput: true })}
           steps={steps}
           previousStep={previousStep}
           triggerNextStep={this.triggerNextStep}
@@ -598,6 +627,7 @@ class ChatBot extends Component {
       shouldPickAssistantFirst,
       assistants,
       className,
+      colors,
       contentStyle,
       floating,
       floatingStyle,
@@ -636,7 +666,7 @@ class ChatBot extends Component {
       if (shouldPickAssistantFirst && assistants.length && !isAssistantSelected) {
         return pickAssistants(assistants);
       }
-      return chatComponent(assistant);
+      return chatComponent(assistant, colors);
     };
 
     const pickAssistants = () => (
@@ -730,6 +760,7 @@ ChatBot.propTypes = {
   cache: PropTypes.bool,
   cacheName: PropTypes.string,
   className: PropTypes.string,
+  colors: PropTypes.array,
   contentStyle: PropTypes.object,
   customDelay: PropTypes.number,
   customStyle: PropTypes.object,
@@ -774,6 +805,7 @@ ChatBot.defaultProps = {
   cache: false,
   cacheName: 'rsc_cache',
   className: '',
+  colors: undefined,
   contentStyle: {},
   customStyle: {},
   customDelay: 1000,

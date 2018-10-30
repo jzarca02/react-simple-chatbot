@@ -15,8 +15,8 @@ class OptionsStep extends Component {
     this.onOptionClick = this.onOptionClick.bind(this);
   }
 
-  onOptionClick({ value }) {
-    this.props.triggerNextStep({ value });
+  onOptionClick({ value, label }) {
+    this.props.triggerNextStep({ value, label });
   }
 
   renderOption(option) {
@@ -33,7 +33,7 @@ class OptionsStep extends Component {
           className="rsc-os-option-element"
           style={bubbleOptionStyle}
           user={user}
-          onClick={() => this.onOptionClick({ value })}
+          onClick={() => this.onOptionClick({ value, label })}
         >
           {label}
         </OptionElement>
