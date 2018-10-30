@@ -237,7 +237,6 @@ class ChatBot extends Component {
     });
   }
 
-
   triggerNextStep(data) {
     const { enableMobileAutoFocus } = this.props;
     const { defaultUserSettings, previousSteps, renderedSteps, steps } = this.state;
@@ -267,7 +266,6 @@ class ChatBot extends Component {
         message: option.label,
         trigger,
       });
-
 
       renderedSteps.pop();
       previousSteps.pop();
@@ -520,7 +518,7 @@ class ChatBot extends Component {
       hideBotAvatar,
       hideUserAvatar,
     } = this.props;
-    const { options, component, asMessage, image } = step;
+    const { options, component, asMessage, image, hiddenaction } = step;
     const steps = this.generateRenderedStepsById();
     const previousStep = index > 0 ? renderedSteps[index - 1] : {};
 
@@ -531,6 +529,18 @@ class ChatBot extends Component {
           step={step}
           steps={steps}
           style={customStyle}
+          previousStep={previousStep}
+          triggerNextStep={this.triggerNextStep}
+        />
+      );
+    }
+
+    if (hiddenaction) {
+      return (
+        <CustomStep
+          key={index}
+          step={Object.assign(step, { component: null })}
+          steps={steps}
           previousStep={previousStep}
           triggerNextStep={this.triggerNextStep}
         />
