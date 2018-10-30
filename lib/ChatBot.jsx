@@ -45,8 +45,6 @@ class ChatBot extends Component {
       defaultUserSettings: {},
     };
 
-    console.log(props);
-
     this.content = React.createRef();
     this.renderStep = this.renderStep.bind(this);
     this.getTriggeredStep = this.getTriggeredStep.bind(this);
@@ -241,12 +239,10 @@ class ChatBot extends Component {
   }
 
   triggerNextStep(data) {
-    console.log('data received', data);
     const { enableMobileAutoFocus } = this.props;
     const { defaultUserSettings, previousSteps, renderedSteps, steps } = this.state;
     let { currentStep, previousStep } = this.state;
     const isEnd = currentStep.end;
-    console.log('currentStep received', currentStep);
 
     if (data && data.value) {
       currentStep.value = data.value;
@@ -261,8 +257,6 @@ class ChatBot extends Component {
     if (isEnd) {
       this.handleEnd();
     } else if (currentStep.options && data) {
-      console.log('currentstep options', currentStep);
-      console.log('data', data);
       const option = currentStep.options.filter(o => o.value === data.value)[0];
       const trigger = this.getTriggeredStep(option.trigger, currentStep.value);
       delete currentStep.options;
@@ -285,16 +279,13 @@ class ChatBot extends Component {
         previousSteps,
       });
     } else if (currentStep.trigger) {
-      console.log('currentstep trigger', currentStep);
       if (currentStep.replace) {
         renderedSteps.pop();
       }
 
       const trigger = this.getTriggeredStep(currentStep.trigger, currentStep.value);
-      console.log('trigger', trigger);
 
       let nextStep = Object.assign({}, steps.find(x => x.id === trigger));
-      console.log('next step', nextStep);
 
       if (nextStep.message) {
         nextStep.message = this.getStepMessage(nextStep.message);
@@ -424,7 +415,6 @@ class ChatBot extends Component {
   submitUserMessage() {
     const { defaultUserSettings, inputValue, previousSteps, renderedSteps } = this.state;
     let { currentStep } = this.state;
-    console.log('submitusermessage validator', currentStep);
 
     const isInvalid = currentStep.validator && this.checkInvalidInput();
 
