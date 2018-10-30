@@ -424,6 +424,7 @@ class ChatBot extends Component {
   submitUserMessage() {
     const { defaultUserSettings, inputValue, previousSteps, renderedSteps } = this.state;
     let { currentStep } = this.state;
+    console.log('submitusermessage validator', currentStep);
 
     const isInvalid = currentStep.validator && this.checkInvalidInput();
 
@@ -456,7 +457,7 @@ class ChatBot extends Component {
   checkInvalidInput() {
     const { enableMobileAutoFocus } = this.props;
     const { currentStep, inputValue } = this.state;
-    const result = currentStep.validator(inputValue);
+    const result = typeof currentStep.validator === 'string' ? eval(currentStep.validator)(inputValue) : currentStep.validator(inputValue);
     const value = inputValue;
 
     if (typeof result !== 'boolean' || !result) {
