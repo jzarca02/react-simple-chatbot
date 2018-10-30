@@ -10,6 +10,7 @@
   "rules": {
     "guard-for-in": ["off"],
     "no-console": ["off"],
+    "no-eval": ["off"],
     "no-use-before-define": ["off"],
     "no-restricted-syntax": ["off"],
     "no-param-reassign": ["off"],
