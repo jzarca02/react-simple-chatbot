@@ -30,6 +30,8 @@ class ChatBot extends Component {
     this.state = {
       isAssistantSelected: props.isAssistantSelected,
       assistant: props.assistant,
+      templateVariables: props.templateVariables,
+      chatStarted: false,
       colors: props.colors,
       renderedSteps: [],
       previousSteps: [],
@@ -126,8 +128,18 @@ class ChatBot extends Component {
   }
 
   componentDidMount() {
-    // this.content.addEventListener('DOMNodeInserted', this.onNodeInserted.bind(this));
-    window.addEventListener('resize', this.onResize);
+    if (this.content && this.state.chatStarted) {
+      this.content.addEventListener('DOMNodeInserted', this.onNodeInserted);
+      window.addEventListener('resize', this.onResize);
+    }
+  }
+
+  componentWillReceiveProps(nextProps) {
+    const { templateVariables } = this.state;
+
+    if (templateVariables !== undefined && templateVariables !== nextProps.templateVariables) {
+      this.setState({ templateVariables: nextProps.templateVariables });
+    }
   }
 
   componentWillUpdate(nextProps, nextState) {
@@ -156,8 +168,10 @@ class ChatBot extends Component {
   }
 
   componentWillUnmount() {
-    this.content.removeEventListener('DOMNodeInserted', this.onNodeInserted);
-    window.removeEventListener('resize', this.onResize);
+    if (this.content) {
+      this.content.removeEventListener('DOMNodeInserted', this.onNodeInserted);
+      window.removeEventListener('resize', this.onResize);
+    }
   }
 
   onNodeInserted(event) {
@@ -284,8 +298,7 @@ class ChatBot extends Component {
       }
 
       const trigger = this.getTriggeredStep(currentStep.trigger, currentStep.value);
-
-      let nextStep = Object.assign({}, steps.find(x => x.id === trigger));
+      let nextStep = Object.assign({}, Object.values(steps).find(x => x.id === trigger));
 
       if (nextStep.message) {
         nextStep.message = this.getStepMessage(nextStep.message);
@@ -512,7 +525,7 @@ class ChatBot extends Component {
   }
 
   renderStep(step, index) {
-    const { renderedSteps } = this.state;
+    const { renderedSteps, templateVariables } = this.state;
     const {
       bubbleStyle,
       bubbleOptionStyle,
@@ -600,6 +613,7 @@ class ChatBot extends Component {
         steps={steps}
         previousStep={previousStep}
         previousValue={previousStep.value}
+        templateVariables={templateVariables}
         triggerNextStep={this.triggerNextStep}
         bubbleStyle={bubbleStyle}
         hideBotAvatar={hideBotAvatar}
@@ -665,7 +679,6 @@ class ChatBot extends Component {
     );
 
     const chatComponent = () => (
-      // this.content.addEventListener('DOMNodeInserted', this.onNodeInserted.bind(this));
       <div>
         <Content
           className="rsc-content"
@@ -779,6 +792,7 @@ ChatBot.propTypes = {
   steps: PropTypes.array.isRequired,
   style: PropTypes.object,
   submitButtonStyle: PropTypes.object,
+  templateVariables: PropTypes.object,
   userAvatar: PropTypes.string,
   userDelay: PropTypes.number,
   width: PropTypes.string,
@@ -821,6 +835,7 @@ ChatBot.defaultProps = {
   selectAssistantFunction: undefined,
   style: {},
   submitButtonStyle: {},
+  templateVariables: {},
   toggleFloating: undefined,
   userDelay: 1000,
   width: '350px',

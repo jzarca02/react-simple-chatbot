@@ -87,6 +87,7 @@
     "react": "^16.4.1",
     "react-color": "https://github.com/jzarca02/react-color.git",
     "react-dom": "^16.4.1",
+    "squirrelly": "^6.1.1",
     "uishibam": "https://github.com/Wishibam/UIshibam.git"
   },
   "peerDependencies": {

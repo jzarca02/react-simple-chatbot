@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import * as Sqrl from 'squirrelly';
+
 import Bubble from './Bubble';
 import Image from './Image';
 import ImageContainer from './ImageContainer';
@@ -34,13 +36,15 @@ class TextStep extends Component {
   renderMessage() {
     const {
       previousValue,
+      templateVariables,
       step,
       steps,
       previousStep,
       triggerNextStep,
     } = this.props;
+
     const { component } = step;
-    let { message } = step;
+    const { message } = step;
 
     if (component) {
       return React.cloneElement(component, {
@@ -51,9 +55,8 @@ class TextStep extends Component {
       });
     }
 
-    message = message.replace(/{previousValue}/g, previousValue);
-
-    return message;
+    const replacedMessage = message ? message.replace(/{previousValue}/g, previousValue) : '';
+    return message ? Sqrl.Render(replacedMessage, templateVariables) : null;
   }
 
   render() {
@@ -66,33 +69,24 @@ class TextStep extends Component {
       hideBotAvatar,
       hideUserAvatar,
     } = this.props;
-    const {
-      avatar,
-      user,
-    } = step;
+    const { avatar, user } = step;
 
     const showAvatar = user ? !hideUserAvatar : !hideBotAvatar;
 
     return (
-      <TextStepContainer
-        className="rsc-ts"
-        user={user}
-      >
-        <ImageContainer
-          className="rsc-ts-image-container"
-          user={user}
-        >
-          {
-            isLast && showAvatar &&
-            <Image
-              className="rsc-ts-image"
-              style={avatarStyle}
-              showAvatar={showAvatar}
-              user={user}
-              src={avatar}
-              alt="avatar"
-            />
-          }
+      <TextStepContainer className="rsc-ts" user={user}>
+        <ImageContainer className="rsc-ts-image-container" user={user}>
+          {isLast &&
+            showAvatar && (
+              <Image
+                className="rsc-ts-image"
+                style={avatarStyle}
+                showAvatar={showAvatar}
+                user={user}
+                src={avatar}
+                alt="avatar"
+              />
+            )}
         </ImageContainer>
         <Bubble
           className="rsc-ts-bubble"
@@ -102,11 +96,7 @@ class TextStep extends Component {
           isFirst={isFirst}
           isLast={isLast}
         >
-          {
-            this.state.loading &&
-            <Loading />
-          }
-          { !this.state.loading && this.renderMessage() }
+          {this.state.loading ? <Loading /> : this.renderMessage()}
         </Bubble>
       </TextStepContainer>
     );
@@ -125,12 +115,14 @@ TextStep.propTypes = {
   previousStep: PropTypes.object,
   previousValue: PropTypes.any,
   steps: PropTypes.object,
+  templateVariables: PropTypes.object,
 };
 
 TextStep.defaultProps = {
   previousStep: {},
   steps: {},
   previousValue: '',
+  templateVariables: {},
 };
 
 export default TextStep;
