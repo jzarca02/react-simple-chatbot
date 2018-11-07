@@ -168,7 +168,7 @@ class ChatBot extends Component {
   }
 
   componentWillUnmount() {
-    if (this.content) {
+    if (this.content && this.state.chatStarted) {
       this.content.removeEventListener('DOMNodeInserted', this.onNodeInserted);
       window.removeEventListener('resize', this.onResize);
     }
