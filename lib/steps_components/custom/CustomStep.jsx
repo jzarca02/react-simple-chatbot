@@ -29,8 +29,13 @@ class CustomStep extends Component {
   }
 
   renderComponent() {
-    const { step, steps, previousStep, triggerNextStep } = this.props;
+    const { step, steps, previousStep, triggerNextStep, action } = this.props;
     const { component } = step;
+
+    if (action) {
+      action();
+      return null;
+    }
     return React.cloneElement(component, {
       step,
       steps,
@@ -44,17 +49,12 @@ class CustomStep extends Component {
     const { style, step } = this.props;
 
     return step.component ? (
-      <CustomStepContainer
-        className="rsc-cs"
-        style={style}
-      >
-        {
-          loading ? (
-            <Loading />
-          ) : this.renderComponent()
-        }
+      <CustomStepContainer className="rsc-cs" style={style}>
+        {loading ? <Loading /> : this.renderComponent()}ke
       </CustomStepContainer>
-    ) : null;
+    ) : (
+      this.renderComponent()
+    );
   }
 }
 
@@ -64,6 +64,11 @@ CustomStep.propTypes = {
   style: PropTypes.object.isRequired,
   previousStep: PropTypes.object.isRequired,
   triggerNextStep: PropTypes.func.isRequired,
+  action: PropTypes.func,
+};
+
+CustomStep.defaultProps = {
+  action: undefined,
 };
 
 export default CustomStep;

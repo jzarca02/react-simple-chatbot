@@ -279,6 +279,7 @@ class ChatBot extends Component {
       currentStep = Object.assign({}, currentStep, option, defaultUserSettings, {
         user: true,
         message: option.label,
+        value: data.value,
         trigger,
       });
 
@@ -533,10 +534,13 @@ class ChatBot extends Component {
       hideBotAvatar,
       hideUserAvatar,
       colors,
+      sendRequest,
+      sendHiddenAction,
     } = this.props;
     const { options, component, asMessage, image, hiddenaction, action } = step;
     const steps = this.generateRenderedStepsById();
     const previousStep = index > 0 ? renderedSteps[index - 1] : {};
+    console.log('renderStep', step);
 
     if (component && !asMessage) {
       return (
@@ -555,10 +559,11 @@ class ChatBot extends Component {
       return (
         <CustomStep
           key={index}
-          step={Object.assign(step, { component: null })}
+          step={step}
           steps={steps}
           previousStep={previousStep}
           triggerNextStep={this.triggerNextStep}
+          action={sendHiddenAction}
         />
       );
     }
@@ -576,6 +581,21 @@ class ChatBot extends Component {
           steps={steps}
           previousStep={previousStep}
           triggerNextStep={this.triggerNextStep}
+        />
+      );
+    }
+
+    if (action && action === 'send_request') {
+      return (
+        <CustomStep
+          key={index}
+          step={Object.assign(step, { component: null })}
+          steps={steps}
+          previousStep={previousStep}
+          waitAction={true}
+          asMessage={true}
+          triggerNextStep={this.triggerNextStep}
+          action={sendRequest}
         />
       );
     }
@@ -789,6 +809,8 @@ ChatBot.propTypes = {
   shouldPickAssistantFirst: PropTypes.bool,
   logFirstFunction: PropTypes.func,
   selectAssistantFunction: PropTypes.func,
+  sendHiddenAction: PropTypes.func,
+  sendRequest: PropTypes.func,
   steps: PropTypes.array.isRequired,
   style: PropTypes.object,
   submitButtonStyle: PropTypes.object,
@@ -833,6 +855,8 @@ ChatBot.defaultProps = {
   shouldLogFirst: false,
   logFirstFunction: undefined,
   selectAssistantFunction: undefined,
+  sendHiddenAction: evt => console.log(evt),
+  sendRequest: undefined,
   style: {},
   submitButtonStyle: {},
   templateVariables: {},
